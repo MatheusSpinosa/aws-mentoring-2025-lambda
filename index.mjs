@@ -2,6 +2,7 @@ import {
   S3Client,
   GetObjectCommand,
   PutObjectCommand,
+  DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import sharp from "sharp";
 
@@ -50,6 +51,15 @@ export const handler = async (event, context) => {
         ContentType,
       })
     );
+
+    // delete original image from the source bucket
+    await S3.send(
+      new DeleteObjectCommand({
+        Bucket: srcBucket,
+        Key: srcKey,
+      })
+    );
+
     const message = `Successfully resized ${srcBucket}/${srcKey} and uploaded to ${DEST_BUCKET}/${srcKey}`;
     console.log(message);
     return {
