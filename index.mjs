@@ -26,6 +26,12 @@ export const handler = async (event, context) => {
   console.log(`${eventTime} - ${srcBucket}/${srcKey}`);
 
   if (!SUPPORTED_FORMATS[ext]) {
+    await S3.send(
+      new DeleteObjectCommand({
+        Bucket: srcBucket,
+        Key: srcKey,
+      })
+    );
     console.log(`ERROR: Unsupported file type (${ext})`);
     return;
   }
@@ -40,7 +46,9 @@ export const handler = async (event, context) => {
     );
     const image = await Body.transformToByteArray();
     // resize image
-    const outputBuffer = await sharp(image).resize(THUMBNAIL_WIDTH).toBuffer();
+    const outputBuffer = await sharp(image)
+      .resize(THUMBNAIL_WIDTH, THUMBNAIL_WIDTH, { fit: "cover" })
+      .toBuffer();
 
     // store new image in the destination bucket
     await S3.send(
